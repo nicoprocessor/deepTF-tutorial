@@ -1,4 +1,9 @@
+'''TensorFlow structure for classification problem'''
+
 import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_blobs
+#%matplotlib inline #uncomment if using Jupyter Notebook
 
 
 class Operation():
@@ -13,7 +18,8 @@ class Operation():
 
         _default_graph.operations.append(self)
 
-    def compute(self, x, y):
+    def compute(self, x, *y):
+        '''Produces the output of the computation of this operation on parameters'''
         # to be overwritten by extending classes
         pass
 
@@ -118,26 +124,43 @@ def traverse_postorder(operation):
     def recurse(node):
         if isinstance(node, Operation):
             for input_node in node.input_nodes:
-                recurse(input_node) #recursive call
+                recurse(input_node)  # recursive call
         nodes_postorder.append(node)
 
     recurse(operation)
     return nodes_postorder
 
 
-# main - example
-#A = 10
-#b = 1
-# z = Ax+b -> 10x+1
+class Sigmoid(Operation):
+    '''Sigmoid activation function'''
+
+    def __init__(self, z):
+        super().__init__([z])
+
+    def compute(self, z):
+        return 1 / (1 + np.exp(-z))
+
+
+# creates a tuple (array:array) where the first entry is the feature and the second  entry is the label
+data = make_blobs(n_samples=100, n_features=2, centers=2, random_state=75)
+#sfeatures = data[0]
+#labels = data[1]
+#plt.scatter(features[:, 0], features[:, 1], c=labels, cmap='coolwarm')
+# plt.show()
+
+#x = np.linspace(0, 11, 10)
+#y = -x
+
+#np.array([1,1]).dot(np.array([[8],[10]])) - 5
+#np.array([1,1]).dot(np.array([[2],[10]])) - 5
+
 g = Graph()
 g.set_as_default()
-A = Variable(10)
-b = Variable(1)
-x = Placehoder()  # independent variable
-y = Multiply(A, x)
-z = Add(y, b)  # dependent variable
-
-# run session
+x = Placehoder() #independent variable
+w = Variable([1,1]) #weights
+b = Variable(-5) #bias
+z = Add(Matmul(w,x),b)
+a = Sigmoid(z)
 sess = Session()
-result = sess.run(operation=z, feed_dict={x: 10})
+result = sess.run(operation=a, feed_dict={x: [2,-10]})
 print(result)
